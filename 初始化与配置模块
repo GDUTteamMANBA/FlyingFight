@@ -32,7 +32,7 @@ MAX_PROGRESS = 1000  # 最大进度值
 # 初始敌机数量
 INITIAL_ENEMY_COUNT = 5
 
-# 创建精灵组
+# 创建精灵组//
 all_sprites = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
