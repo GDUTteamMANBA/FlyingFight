@@ -124,7 +124,7 @@ def main():
         
         all_sprites.draw(screen)
         
-        # 绘制敌机血条
+        # 绘制敌机血条/
         for enemy in enemies:
             draw_health_bar(screen, enemy.rect.x, enemy.rect.y - 5, enemy.health, enemy.max_health)
         
