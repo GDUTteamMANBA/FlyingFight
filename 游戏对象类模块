@@ -227,3 +227,76 @@ class Enemy(pygame.sprite.Sprite):
         """敌机受到伤害"""
         self.health -= (amount + extra_damage)
         return self.health <= 0
+    # bullets.py
+import pygame
+from config import *
+from resources import load_image
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, has_attack_boost=False):
+        super().__init__()
+        self.has_attack_boost = has_attack_boost
+        self._load_appearance()
+        
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.bottom = y
+        self.speedy = -10
+
+    def _load_appearance(self):
+        """加载子弹外观"""
+        try:
+            if os.path.exists("laserRed15.png"):
+                self.image = pygame.image.load("laserRed15.png").convert_alpha()
+                original_width, original_height = self.image.get_size()
+                self.image = pygame.transform.scale(self.image, 
+                                                   (original_width // 2, original_height // 2))
+
+                # 如果有攻击加强，改变子弹颜色
+                if self.has_attack_boost:
+                    overlay = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
+                    overlay.fill((255, 0, 0, 64))  # 半透明红色
+                    self.image.blit(overlay, (0, 0))
+            else:
+                self.image = pygame.Surface((5, 10), pygame.SRCALPHA)
+                color = RED if self.has_attack_boost else WHITE
+                pygame.draw.rect(self.image, color, (0, 0, 5, 10))
+        except:
+            self.image = pygame.Surface((5, 10))
+            color = RED if self.has_attack_boost else WHITE
+            self.image.fill(color)
+
+    def update(self):
+        self.rect.y += self.speedy
+        if self.rect.bottom < 0:
+            self.kill()
+
+class EnemyBullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self._load_appearance()
+        
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.top = y
+        self.speedy = 5
+
+    def _load_appearance(self):
+        """加载敌机子弹外观"""
+        try:
+            if os.path.exists("laserGreen10.png"):
+                self.image = pygame.image.load("laserGreen10.png").convert_alpha()
+                original_width, original_height = self.image.get_size()
+                self.image = pygame.transform.scale(self.image, 
+                                                   (original_width // 2, original_height // 2))
+            else:
+                self.image = pygame.Surface((5, 10), pygame.SRCALPHA)
+                pygame.draw.rect(self.image, YELLOW, (0, 0, 5, 10))
+        except:
+            self.image = pygame.Surface((5, 10))
+            self.image.fill(YELLOW)
+
+    def update(self):
+        self.rect.y += self.speedy
+        if self.rect.top > HEIGHT:
+            self.kill()
