@@ -1,0 +1,68 @@
+# resources.py
+import pygame
+import os
+
+def load_sound(filename):
+    """加载音效"""
+    try:
+        if os.path.exists(filename):
+            return pygame.mixer.Sound(filename)
+    except:
+        pass
+    return None
+
+def load_image(filename, scale=1):
+    """加载并缩放图片"""
+    try:
+        if os.path.exists(filename):
+            image = pygame.image.load(filename).convert_alpha()
+            if scale != 1:
+                width = int(image.get_width() * scale)
+                height = int(image.get_height() * scale)
+                image = pygame.transform.scale(image, (width, height))
+            return image
+    except:
+        pass
+    return None
+
+def get_chinese_font(size):
+    """尝试加载系统中可能的中文字体"""
+    font_list = [
+        'simhei.ttf',  # 黑体
+        'simsun.ttc',  # 宋体
+        'msyh.ttc',  # 微软雅黑
+        'simkai.ttf',  # 楷体
+        'STKAITI.TTF',  # 楷体
+        'C:\\Windows\\Fonts\\simhei.ttf',  # Windows黑体路径
+        'C:\\Windows\\Fonts\\simsun.ttc',  # Windows宋体路径
+        '/System/Library/Fonts/PingFang.ttf',  # Mac苹方字体
+        '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf'  # Linux字体
+    ]
+
+    for font_name in font_list:
+        try:
+            if os.path.exists(font_name):
+                return pygame.font.Font(font_name, size)
+        except:
+            continue
+
+    # 如果找不到中文字体，尝试使用系统默认字体
+    try:
+        return pygame.font.SysFont('simsunnsimsun', size)
+    except:
+        try:
+            return pygame.font.SysFont('microsoftyaheiuims', size)
+        except:
+            return pygame.font.Font(None, size)
+
+# 加载音效
+shoot_sound = load_sound("sfx_laser1.ogg")
+
+# 加载背景图片
+background_image = None
+try:
+    if os.path.exists("darkPurple.png"):
+        background_image = pygame.image.load("darkPurple.png").convert()
+        background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+except:
+    pass
