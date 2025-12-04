@@ -141,3 +141,89 @@ class Player(pygame.sprite.Sprite):
         elif item_type == "attack_boost":
             self.has_attack_boost = True
         self.update_appearance()
+
+# enemy.py
+import pygame
+import random
+import math
+from config import *
+from resources import get_chinese_font
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, health=100):
+        super().__init__()
+        self._load_appearance()
+        
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(WIDTH - self.rect.width)
+        self.rect.y = random.randrange(-100, -40)
+
+        self.health = health
+        self.max_health = health
+        self.speed = random.uniform(1.0, 3.0)
+        self.direction = random.uniform(0, 2 * math.pi)
+        self.direction_change_timer = 0
+        self.direction_change_interval = random.randint(30, 90)
+        self.shoot_delay = random.randrange(3000, 6000)
+        self.last_shot = pygame.time.get_ticks()
+
+    def _load_appearance(self):
+        """加载敌机外观"""
+        try:
+            if os.path.exists("enemyBlack5.png"):
+                self.image = pygame.image.load("enemyBlack5.png").convert_alpha()
+                original_width, original_height = self.image.get_size()
+                self.image = pygame.transform.scale(self.image, 
+                                                   (original_width // 2, original_height // 2))
+            else:
+                self.image = pygame.Surface((30, 30), pygame.SRCALPHA)
+                pygame.draw.polygon(self.image, RED, [(15, 30), (0, 0), (30, 0)])
+                pygame.draw.rect(self.image, RED, (5, 0, 20, 15))
+        except:
+            self.image = pygame.Surface((30, 30))
+            self.image.fill(RED)
+
+    def update(self, game_progress):
+        # 随机飞行轨迹
+        self.direction_change_timer += 1
+        if self.direction_change_timer >= self.direction_change_interval:
+            self.direction_change_timer = 0
+            self.direction += random.uniform(-0.5, 0.5)
+            self.direction %= 2 * math.pi
+
+        # 根据方向移动
+        self.rect.x += math.cos(self.direction) * self.speed
+        self.rect.y += math.sin(self.direction) * self.speed
+
+        # 边界检查
+        if self.rect.left < 0:
+            self.rect.left = 0
+            self.direction = math.pi - self.direction
+        elif self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+            self.direction = math.pi - self.direction
+
+        if self.rect.top < 0:
+            self.rect.top = 0
+            self.direction = -self.direction
+        elif self.rect.bottom > HEIGHT:
+            self.rect.x = random.randrange(WIDTH - self.rect.width)
+            self.rect.y = random.randrange(-100, -40)
+            self.direction = random.uniform(0, 2 * math.pi)
+
+        # 敌机射击
+        now = pygame.time.get_ticks()
+        current_shoot_delay = max(500, self.shoot_delay - (game_progress * 2))
+        if now - self.last_shot > current_shoot_delay:
+            self.last_shot = now
+            self.shoot()
+
+    def shoot(self, all_sprites, enemy_bullets):
+        enemy_bullet = EnemyBullet(self.rect.centerx, self.rect.bottom)
+        all_sprites.add(enemy_bullet)
+        enemy_bullets.add(enemy_bullet)
+
+    def take_damage(self, amount, extra_damage=0):
+        """敌机受到伤害"""
+        self.health -= (amount + extra_damage)
+        return self.health <= 0
