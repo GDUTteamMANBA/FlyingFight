@@ -23,7 +23,7 @@ def load_image(filename, scale=1):
             return image
     except:
         pass
-    return none##
+    return none##，，
 
 def get_chinese_font(size):
     """尝试加载系统中可能的中文字体"""
