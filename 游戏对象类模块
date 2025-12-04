@@ -300,3 +300,139 @@ class EnemyBullet(pygame.sprite.Sprite):
         self.rect.y += self.speedy
         if self.rect.top > HEIGHT:
             self.kill()
+
+            # bullets.py
+import pygame
+from config import *
+from resources import load_image
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, has_attack_boost=False):
+        super().__init__()
+        self.has_attack_boost = has_attack_boost
+        self._load_appearance()
+        
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.bottom = y
+        self.speedy = -10
+
+    def _load_appearance(self):
+        """加载子弹外观"""
+        try:
+            if os.path.exists("laserRed15.png"):
+                self.image = pygame.image.load("laserRed15.png").convert_alpha()
+                original_width, original_height = self.image.get_size()
+                self.image = pygame.transform.scale(self.image, 
+                                                   (original_width // 2, original_height // 2))
+
+                # 如果有攻击加强，改变子弹颜色
+                if self.has_attack_boost:
+                    overlay = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
+                    overlay.fill((255, 0, 0, 64))  # 半透明红色
+                    self.image.blit(overlay, (0, 0))
+            else:
+                self.image = pygame.Surface((5, 10), pygame.SRCALPHA)
+                color = RED if self.has_attack_boost else WHITE
+                pygame.draw.rect(self.image, color, (0, 0, 5, 10))
+        except:
+            self.image = pygame.Surface((5, 10))
+            color = RED if self.has_attack_boost else WHITE
+            self.image.fill(color)
+
+    def update(self):
+        self.rect.y += self.speedy
+        if self.rect.bottom < 0:
+            self.kill()
+
+class EnemyBullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self._load_appearance()
+        
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.top = y
+        self.speedy = 5
+
+    def _load_appearance(self):
+        """加载敌机子弹外观"""
+        try:
+            if os.path.exists("laserGreen10.png"):
+                self.image = pygame.image.load("laserGreen10.png").convert_alpha()
+                original_width, original_height = self.image.get_size()
+                self.image = pygame.transform.scale(self.image, 
+                                                   (original_width // 2, original_height // 2))
+            else:
+                self.image = pygame.Surface((5, 10), pygame.SRCALPHA)
+                pygame.draw.rect(self.image, YELLOW, (0, 0, 5, 10))
+        except:
+            self.image = pygame.Surface((5, 10))
+            self.image.fill(YELLOW)
+
+    def update(self):
+        self.rect.y += self.speedy
+        if self.rect.top > HEIGHT:
+            self.kill()
+
+            # ui_components.py
+import pygame
+from config import *
+
+class Button:
+    def __init__(self, x, y, width, height, text, font, color=LIGHT_BLUE, hover_color=BLUE):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.text = text
+        self.font = font
+        self.color = color
+        self.hover_color = hover_color
+        self.is_hovered = False
+
+    def draw(self, surface):
+        color = self.hover_color if self.is_hovered else self.color
+        pygame.draw.rect(surface, color, self.rect, border_radius=10)
+        pygame.draw.rect(surface, WHITE, self.rect, 2, border_radius=10)
+
+        text_surface = self.font.render(self.text, True, WHITE)
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        surface.blit(text_surface, text_rect)
+
+    def check_hover(self, pos):
+        self.is_hovered = self.rect.collidepoint(pos)
+        return self.is_hovered
+
+    def is_clicked(self, pos, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            return self.rect.collidepoint(pos)
+        return False
+
+class ShopItem:
+    def __init__(self, name, description, price, item_type, item_data=None):
+        self.name = name
+        self.description = description
+        self.price = price
+        self.item_type = item_type  # "ship" 或 "item"
+        self.item_data = item_data
+        self.is_purchased = False
+
+    def draw(self, surface, x, y, width, height, font, small_font):
+        """绘制商店商品"""
+        bg_color = GREEN if self.is_purchased else LIGHT_BLUE
+        pygame.draw.rect(surface, bg_color, (x, y, width, height), border_radius=8)
+        pygame.draw.rect(surface, WHITE, (x, y, width, height), 2, border_radius=8)
+
+        # 绘制名称和价格
+        name_text = font.render(self.name, True, WHITE)
+        price_text = small_font.render(f"价格: {self.price}金币", True, YELLOW)
+
+        surface.blit(name_text, (x + 10, y + 10))
+        surface.blit(price_text, (x + 10, y + 40))
+
+        # 绘制描述
+        desc_text = small_font.render(self.description, True, WHITE)
+        surface.blit(desc_text, (x + 10, y + 60))
+
+        # 绘制已购买标记
+        if self.is_purchased:
+            purchased_text = font.render("已购买", True, GREEN)
+            surface.blit(purchased_text, (x + width - 80, y + 10))
