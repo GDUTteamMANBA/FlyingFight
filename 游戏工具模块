@@ -75,4 +75,4 @@ def reset_game(player):
         all_sprites.add(enemy)
         enemies.add(enemy)
     
-    return new_player, 0, 0  # 返回新玩家、分数重置为0、进度重置为0
+    return new_player, 0, 0  # 返回新玩家、分数重置为0、进度重置为0//
