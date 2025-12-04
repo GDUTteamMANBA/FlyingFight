@@ -493,7 +493,7 @@ class ShopItem:
         desc_text = small_font.render(self.description, True, WHITE)
         surface.blit(desc_text, (x + 10, y + 60))
 
-        # 绘制已购买标记
+        # 绘制已购买标记//
         if self.is_purchased:
             purchased_text = font.render("已购买", True, GREEN)
             surface.blit(purchased_text, (x + width - 80, y + 10))
