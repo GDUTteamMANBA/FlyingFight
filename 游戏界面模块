@@ -220,4 +220,4 @@ def show_game_over_screen(final_score, player_coins):
                 choice = "quit"
                 waiting = False
 
-    return choice, player_coins
+    return choice, player_coins##
