@@ -184,7 +184,7 @@ def show_game_over_screen(final_score, player_coins):
     coins_text = score_font.render(f"获得金币: +{coins_earned} (总计: {player_coins})", True, YELLOW)
     coins_rect = coins_text.get_rect(center=(WIDTH / 2, HEIGHT / 3))
 
-    # 创建按钮
+    # 创建按钮啊啊
     restart_button = Button(WIDTH // 2 - 100, HEIGHT // 2 - 25, 200, 50, "重新开始", button_font)
     quit_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 50, 200, 50, "退出游戏", button_font)
 
