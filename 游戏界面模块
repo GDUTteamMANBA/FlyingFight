@@ -1,0 +1,223 @@
+# game_ui.py
+import pygame
+import sys
+from config import *
+from ui_components import Button, ShopItem
+from resources import get_chinese_font
+from player import Player
+
+def show_shop_screen(player_coins, player):
+    """商店界面"""
+    # 定义商店商品
+    shop_items = [
+        ShopItem("疾风战机", "基础战机，平衡性能", 0, "ship", {"type": 0}),
+        ShopItem("雷霆战机", "速度+10%，血量+20%", 50, "ship", {"type": 1}),
+        ShopItem("幻影战机", "攻击+15%，特殊外观", 100, "ship", {"type": 2}),
+        ShopItem("抗性增强", "子弹伤害1%，撞击伤害10%", 30, "item", {"type": "resistance"}),
+        ShopItem("自回血装置", "每15秒恢复10%血量", 40, "item", {"type": "healing"}),
+        ShopItem("攻击加强器", "攻击额外造成10%伤害", 35, "item", {"type": "attack_boost"})
+    ]
+
+    # 标记已购买的商品
+    shop_items[0].is_purchased = True
+
+    font = get_chinese_font(24)
+    small_font = get_chinese_font(18)
+    title_font = get_chinese_font(36)
+    button_font = get_chinese_font(28)
+
+    # 创建返回按钮
+    back_button = Button(WIDTH // 2 - 100, HEIGHT - 80, 200, 50, "返回主菜单", button_font)
+
+    running = True
+    while running:
+        mouse_pos = pygame.mouse.get_pos()
+
+        # 绘制背景
+        screen.fill(BLACK)
+
+        # 绘制标题
+        title_text = title_font.render("飞 机 商 店", True, YELLOW)
+        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 30))
+
+        # 显示金币数量
+        coins_text = font.render(f"当前金币: {player_coins}", True, YELLOW)
+        screen.blit(coins_text, (WIDTH // 2 - coins_text.get_width() // 2, 80))
+
+        # 绘制商店商品（3x2布局）
+        item_width = 140
+        item_height = 120
+        start_x = 20
+        start_y = 130
+
+        for i, item in enumerate(shop_items):
+            row = i // 3
+            col = i % 3
+            x = start_x + col * (item_width + 20)
+            y = start_y + row * (item_height + 20)
+
+            # 检查鼠标是否悬停在商品上
+            item_rect = pygame.Rect(x, y, item_width, item_height)
+            is_hovered = item_rect.collidepoint(mouse_pos)
+
+            # 绘制商品
+            item.draw(screen, x, y, item_width, item_height, small_font, get_chinese_font(14))
+
+            # 如果鼠标悬停，显示高亮边框
+            if is_hovered and not item.is_purchased:
+                pygame.draw.rect(screen, YELLOW, (x - 2, y - 2, item_width + 4, item_height + 4), 3, border_radius=10)
+
+        # 绘制返回按钮
+        back_button.check_hover(mouse_pos)
+        back_button.draw(screen)
+
+        pygame.display.flip()
+
+        # 处理事件
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            # 检查商品点击
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # 检查返回按钮
+                if back_button.is_clicked(mouse_pos, event):
+                    running = False
+
+                # 检查商品点击
+                for i, item in enumerate(shop_items):
+                    row = i // 3
+                    col = i % 3
+                    x = start_x + col * (item_width + 20)
+                    y = start_y + row * (item_height + 20)
+                    item_rect = pygame.Rect(x, y, item_width, item_height)
+
+                    if item_rect.collidepoint(mouse_pos) and not item.is_purchased:
+                        if player_coins >= item.price:
+                            player_coins -= item.price
+                            item.is_purchased = True
+
+                            # 应用购买效果
+                            if item.item_type == "ship":
+                                player.ship_type = item.item_data["type"]
+                                player.update_appearance()
+                            elif item.item_type == "item":
+                                player.add_item(item.item_data["type"])
+
+    return player_coins
+
+def show_start_screen(player_coins):
+    """开始界面"""
+    screen.fill(BLACK)
+    title_font = get_chinese_font(48)
+    button_font = get_chinese_font(36)
+
+    title_text = title_font.render("飞机大战", True, WHITE)
+    title_rect = title_text.get_rect(center=(WIDTH / 2, HEIGHT / 5))
+
+    # 创建按钮
+    start_button = Button(WIDTH // 2 - 100, HEIGHT // 2 - 80, 200, 50, "开始游戏", button_font)
+    shop_button = Button(WIDTH // 2 - 100, HEIGHT // 2, 200, 50, "商店", button_font)
+    quit_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 80, 200, 50, "退出游戏", button_font)
+
+    screen.blit(title_text, title_rect)
+
+    # 显示金币
+    coins_font = get_chinese_font(28)
+    coins_text = coins_font.render(f"金币: {player_coins}", True, YELLOW)
+    coins_rect = coins_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+    screen.blit(coins_text, coins_rect)
+
+    waiting = True
+    choice = None
+    
+    while waiting:
+        mouse_pos = pygame.mouse.get_pos()
+
+        # 检查鼠标悬停
+        start_button.check_hover(mouse_pos)
+        shop_button.check_hover(mouse_pos)
+        quit_button.check_hover(mouse_pos)
+
+        # 绘制按钮
+        start_button.draw(screen)
+        shop_button.draw(screen)
+        quit_button.draw(screen)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if start_button.is_clicked(mouse_pos, event):
+                choice = "start"
+                waiting = False
+            elif shop_button.is_clicked(mouse_pos, event):
+                choice = "shop"
+                waiting = False
+            elif quit_button.is_clicked(mouse_pos, event):
+                choice = "quit"
+                waiting = False
+
+    return choice
+
+def show_game_over_screen(final_score, player_coins):
+    """游戏结束界面"""
+    # 游戏结束后获得金币奖励
+    coins_earned = final_score // 5
+    player_coins += coins_earned
+
+    screen.fill(BLACK)
+    title_font = get_chinese_font(48)
+    button_font = get_chinese_font(36)
+    score_font = get_chinese_font(24)
+
+    title_text = title_font.render("游戏结束", True, WHITE)
+    title_rect = title_text.get_rect(center=(WIDTH / 2, HEIGHT / 6))
+
+    score_text = score_font.render(f"最终分数: {final_score}", True, WHITE)
+    score_rect = score_text.get_rect(center=(WIDTH / 2, HEIGHT / 4))
+
+    coins_text = score_font.render(f"获得金币: +{coins_earned} (总计: {player_coins})", True, YELLOW)
+    coins_rect = coins_text.get_rect(center=(WIDTH / 2, HEIGHT / 3))
+
+    # 创建按钮
+    restart_button = Button(WIDTH // 2 - 100, HEIGHT // 2 - 25, 200, 50, "重新开始", button_font)
+    quit_button = Button(WIDTH // 2 - 100, HEIGHT // 2 + 50, 200, 50, "退出游戏", button_font)
+
+    screen.blit(title_text, title_rect)
+    screen.blit(score_text, score_rect)
+    screen.blit(coins_text, coins_rect)
+
+    waiting = True
+    choice = None
+
+    while waiting:
+        mouse_pos = pygame.mouse.get_pos()
+
+        # 检查鼠标悬停
+        restart_button.check_hover(mouse_pos)
+        quit_button.check_hover(mouse_pos)
+
+        # 绘制按钮
+        restart_button.draw(screen)
+        quit_button.draw(screen)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if restart_button.is_clicked(mouse_pos, event):
+                choice = "restart"
+                waiting = False
+            elif quit_button.is_clicked(mouse_pos, event):
+                choice = "quit"
+                waiting = False
+
+    return choice, player_coins
