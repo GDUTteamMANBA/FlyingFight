@@ -202,7 +202,7 @@ def show_game_over_screen(final_score, player_coins):
         restart_button.check_hover(mouse_pos)
         quit_button.check_hover(mouse_pos)
 
-        # 绘制按钮
+        # 绘制按钮//
         restart_button.draw(screen)
         quit_button.draw(screen)
 
