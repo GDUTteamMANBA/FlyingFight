@@ -27,7 +27,7 @@ player_coins = 150  # 初始金币
 
 # 游戏进度变量
 game_progress = 0  # 游戏进度，随分数增加
-MAX_PROGRESS = 1000  # 最大进度值
+MAX_PROGRESS = 1000  # 最大进度值//
 
 # 初始敌机数量
 INITIAL_ENEMY_COUNT = 5
