@@ -1,0 +1,78 @@
+# game_utils.py
+import pygame
+from config import *
+
+def draw_health_bar(surface, x, y, health, max_health, width=30, height=4):
+    """绘制血条"""
+    if max_health == 0:
+        return
+    fill = (health / max_health) * width
+    outline_rect = pygame.Rect(x, y, width, height)
+    fill_rect = pygame.Rect(x, y, fill, height)
+    pygame.draw.rect(surface, RED, fill_rect)
+    pygame.draw.rect(surface, WHITE, outline_rect, 1)
+
+def draw_hud(screen, font, score, game_progress, player, WIDTH, HEIGHT):
+    """绘制游戏HUD界面"""
+    # 显示分数
+    score_text = font.render(f'分数: {score}', True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+    # 显示游戏进度
+    progress_text = font.render(f'游戏进度: {game_progress}/{MAX_PROGRESS}', True, WHITE)
+    screen.blit(progress_text, (10, 40))
+
+    # 显示血条和道具状态
+    draw_health_bar(screen, WIDTH - 220, 10, player.health, 100, 200, 20)
+    health_text = font.render(f'血量: {player.health}%', True, WHITE)
+    screen.blit(health_text, (WIDTH - 220, 35))
+
+    # 显示道具状态
+    y_offset = 60
+    if player.has_resistance:
+        resistance_text = font.render("抗性增强", True, GREEN)
+        screen.blit(resistance_text, (WIDTH - 220, y_offset))
+        y_offset += 25
+    if player.has_healing:
+        healing_text = font.render("自动回血", True, GREEN)
+        screen.blit(healing_text, (WIDTH - 220, y_offset))
+        y_offset += 25
+    if player.has_attack_boost:
+        attack_text = font.render("攻击加强", True, GREEN)
+        screen.blit(attack_text, (WIDTH - 220, y_offset))
+
+def reset_game(player):
+    """重置游戏状态"""
+    from config import all_sprites, enemies, bullets, enemy_bullets, INITIAL_ENEMY_COUNT
+    from enemy import Enemy
+    
+    # 清空所有精灵组
+    all_sprites.empty()
+    enemies.empty()
+    bullets.empty()
+    enemy_bullets.empty()
+
+    # 创建新玩家（保留已购买的飞机和道具）
+    current_ship_type = player.ship_type if hasattr(player, 'ship_type') else 0
+    current_has_resistance = player.has_resistance if hasattr(player, 'has_resistance') else False
+    current_has_healing = player.has_healing if hasattr(player, 'has_healing') else False
+    current_has_attack_boost = player.has_attack_boost if hasattr(player, 'has_attack_boost') else False
+
+    from player import Player
+    new_player = Player(current_ship_type)
+    if current_has_resistance:
+        new_player.add_item("resistance")
+    if current_has_healing:
+        new_player.add_item("healing")
+    if current_has_attack_boost:
+        new_player.add_item("attack_boost")
+
+    all_sprites.add(new_player)
+
+    # 创建初始敌机
+    for i in range(INITIAL_ENEMY_COUNT):
+        enemy = Enemy(health=100)
+        all_sprites.add(enemy)
+        enemies.add(enemy)
+    
+    return new_player, 0, 0  # 返回新玩家、分数重置为0、进度重置为0
