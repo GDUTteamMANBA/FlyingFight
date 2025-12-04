@@ -1,0 +1,143 @@
+玩家飞机类：
+# player.py
+import pygame
+from config import *
+from resources import get_chinese_font
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, ship_type=0):
+        super().__init__()
+        self.ship_type = ship_type
+        self._load_appearance()
+        
+        self.rect = self.image.get_rect()
+        self.rect.centerx = WIDTH // 2
+        self.rect.bottom = HEIGHT - 10
+        self.speed = 8
+        self.health = 100
+        self.max_health = 100
+        self.invulnerable = False
+        self.invulnerable_timer = 0
+
+        # 道具效果
+        self.has_resistance = False
+        self.has_healing = False
+        self.has_attack_boost = False
+        self.healing_timer = 0
+
+    def _load_appearance(self):
+        """根据飞机类型加载外观"""
+        try:
+            if os.path.exists("playerShip2_red.png"):
+                self.image = pygame.image.load("playerShip2_red.png").convert_alpha()
+                original_width, original_height = self.image.get_size()
+                self.image = pygame.transform.scale(self.image, 
+                                                   (original_width // 2, original_height // 2))
+            else:
+                self.image = pygame.Surface((50, 40), pygame.SRCALPHA)
+                colors = [GREEN, BLUE, PURPLE]
+                color = colors[self.ship_type % 3]
+                pygame.draw.polygon(self.image, color, [(25, 0), (0, 40), (50, 40)])
+                pygame.draw.rect(self.image, color, (15, 20, 20, 20))
+
+                font = get_chinese_font(20)
+                type_text = font.render(f"{self.ship_type + 1}", True, WHITE)
+                text_rect = type_text.get_rect(center=(25, 20))
+                self.image.blit(type_text, text_rect)
+        except:
+            self.image = pygame.Surface((50, 40))
+            colors = [GREEN, BLUE, PURPLE]
+            self.image.fill(colors[self.ship_type % 3])
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and self.rect.left > 0:
+            self.rect.x -= self.speed
+        if keys[pygame.K_RIGHT] and self.rect.right < WIDTH:
+            self.rect.x += self.speed
+        if keys[pygame.K_UP] and self.rect.top > 0:
+            self.rect.y -= self.speed
+        if keys[pygame.K_DOWN] and self.rect.bottom < HEIGHT:
+            self.rect.y += self.speed
+
+        # 处理无敌状态
+        if self.invulnerable:
+            self.invulnerable_timer -= 1
+            if self.invulnerable_timer <= 0:
+                self.invulnerable = False
+                self.update_appearance()
+
+        # 处理自回血效果
+        if self.has_healing:
+            self.healing_timer += 1
+            if self.healing_timer >= 900:  # 15秒 * 60帧/秒
+                self.healing_timer = 0
+                self.health = min(self.max_health, self.health + 10)
+
+    def update_appearance(self):
+        """根据道具状态更新飞机外观"""
+        try:
+            if not os.path.exists("playerShip2_red.png"):
+                self.image = pygame.Surface((50, 40), pygame.SRCALPHA)
+                colors = [GREEN, BLUE, PURPLE]
+                color = colors[self.ship_type % 3]
+
+                # 根据道具效果添加不同标记
+                if self.has_resistance:
+                    pygame.draw.rect(self.image, YELLOW, (0, 0, 10, 10))
+                if self.has_healing:
+                    pygame.draw.rect(self.image, GREEN, (40, 0, 10, 10))
+                if self.has_attack_boost:
+                    pygame.draw.rect(self.image, RED, (0, 30, 10, 10))
+
+                pygame.draw.polygon(self.image, color, [(25, 0), (0, 40), (50, 40)])
+                pygame.draw.rect(self.image, color, (15, 20, 20, 20))
+
+                font = get_chinese_font(20)
+                type_text = font.render(f"{self.ship_type + 1}", True, WHITE)
+                text_rect = type_text.get_rect(center=(25, 20))
+                self.image.blit(type_text, text_rect)
+        except:
+            pass
+
+    def shoot(self, all_sprites, bullets, shoot_sound):
+        bullet = Bullet(self.rect.centerx, self.rect.top, self.has_attack_boost)
+        all_sprites.add(bullet)
+        bullets.add(bullet)
+        if shoot_sound:
+            shoot_sound.play()
+
+    def take_damage(self, amount, damage_type="bullet"):
+        """受到伤害"""
+        if not self.invulnerable:
+            # 应用抗性增强道具效果
+            if self.has_resistance:
+                if damage_type == "bullet":
+                    amount = 1
+                elif damage_type == "collision":
+                    amount = 10
+
+            self.health -= amount
+            if self.health < 0:
+                self.health = 0
+
+            # 设置无敌状态（1秒）
+            self.invulnerable = True
+            self.invulnerable_timer = 60
+
+            # 受伤时闪烁效果
+            if not os.path.exists("playerShip2_red.png"):
+                self.image.fill(RED)
+
+    def is_invulnerable(self):
+        return self.invulnerable
+
+    def add_item(self, item_type):
+        """添加道具效果"""
+        if item_type == "resistance":
+            self.has_resistance = True
+        elif item_type == "healing":
+            self.has_healing = True
+        elif item_type == "attack_boost":
+            self.has_attack_boost = True
+        self.update_appearance()
