@@ -1,0 +1,141 @@
+# main.py
+import pygame
+import sys
+import os
+from config import *
+from resources import get_chinese_font, shoot_sound, background_image
+from player import Player
+from enemy import Enemy
+from bullets import Bullet, EnemyBullet
+from game_ui import show_start_screen, show_shop_screen, show_game_over_screen
+from game_utils import draw_hud, draw_health_bar, reset_game
+
+def main():
+    global player_coins, game_progress, score
+    
+    # 初始化变量
+    player_coins = 150
+    score = 0
+    game_progress = 0
+    enemy_spawn_timer = 0
+    background_y = 0
+    
+    # 创建玩家
+    player = Player(0)
+    all_sprites.add(player)
+    
+    # 创建初始敌机
+    for i in range(INITIAL_ENEMY_COUNT):
+        enemy = Enemy(health=100)
+        all_sprites.add(enemy)
+        enemies.add(enemy)
+    
+    # 显示开始界面
+    choice = show_start_screen(player_coins)
+    
+    if choice == "quit":
+        pygame.quit()
+        sys.exit()
+    elif choice == "shop":
+        player_coins = show_shop_screen(player_coins, player)
+    
+    # 游戏循环
+    clock = pygame.time.Clock()
+    running = True
+    
+    while running:
+        clock.tick(60)
+        
+        # 更新游戏进度（基于分数）
+        game_progress = min(score, MAX_PROGRESS)
+        
+        # 处理事件
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.shoot(all_sprites, bullets, shoot_sound)
+        
+        # 更新敌机数量 - 随游戏进度增加
+        target_enemy_count = INITIAL_ENEMY_COUNT + (game_progress // 50)
+        target_enemy_count = min(target_enemy_count, 15)
+        
+        # 生成新敌机
+        enemy_spawn_timer += 1
+        if enemy_spawn_timer >= 60 and len(enemies) < target_enemy_count:
+            enemy_spawn_timer = 0
+            enemy_health = 100 + (game_progress // 10)
+            enemy = Enemy(health=enemy_health)
+            all_sprites.add(enemy)
+            enemies.add(enemy)
+        
+        # 更新所有精灵
+        all_sprites.update()
+        
+        # 更新敌机（传入游戏进度）
+        for enemy in enemies:
+            enemy.update(game_progress)
+        
+        # 检查子弹是否击中敌机
+        hits = pygame.sprite.groupcollide(bullets, enemies, True, False)
+        for bullet, enemy_list in hits.items():
+            for enemy in enemy_list:
+                extra_damage = 10 if bullet.has_attack_boost else 0
+                if enemy.take_damage(40, extra_damage):
+                    score += 1
+                    enemy.kill()
+                    new_enemy_health = 100 + (game_progress // 10)
+                    new_enemy = Enemy(health=new_enemy_health)
+                    all_sprites.add(new_enemy)
+                    enemies.add(new_enemy)
+        
+        # 检查敌机子弹是否击中玩家
+        hits = pygame.sprite.spritecollide(player, enemy_bullets, True)
+        for hit in hits:
+            player.take_damage(5, "bullet")
+        
+        # 检查敌机是否撞到玩家
+        if not player.is_invulnerable():
+            hits = pygame.sprite.spritecollide(player, enemies, True)
+            for hit in hits:
+                player.take_damage(20, "collision")
+                new_enemy_health = 100 + (game_progress // 10)
+                enemy = Enemy(health=new_enemy_health)
+                all_sprites.add(enemy)
+                enemies.add(enemy)
+        
+        # 检查玩家是否死亡
+        if player.health <= 0:
+            choice, player_coins = show_game_over_screen(score, player_coins)
+            if choice == "restart":
+                player, score, game_progress = reset_game(player)
+            else:
+                running = False
+            continue
+        
+        # 渲染
+        if background_image:
+            background_y = (background_y + 1) % HEIGHT
+            screen.blit(background_image, (0, background_y))
+            screen.blit(background_image, (0, background_y - HEIGHT))
+        else:
+            screen.fill(BLACK)
+        
+        all_sprites.draw(screen)
+        
+        # 绘制敌机血条
+        for enemy in enemies:
+            draw_health_bar(screen, enemy.rect.x, enemy.rect.y - 5, enemy.health, enemy.max_health)
+        
+        # 绘制HUD
+        font = get_chinese_font(24)
+        draw_hud(screen, font, score, game_progress, player, WIDTH, HEIGHT)
+        
+        pygame.display.flip()
+    
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
