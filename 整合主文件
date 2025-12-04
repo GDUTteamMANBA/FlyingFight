@@ -1,0 +1,140 @@
+# plane_game.py
+"""
+飞机大战 - 主整合文件
+将各个模块整合到一个文件中运行
+"""
+
+import pygame
+import random
+import sys
+import os
+import math
+
+# ========== 初始化和配置 ==========
+pygame.init()
+WIDTH, HEIGHT = 480, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("飞机大战")
+
+# 颜色定义
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+LIGHT_BLUE = (100, 100, 255)
+PURPLE = (128, 0, 128)
+ORANGE = (255, 165, 0)
+
+# 全局变量
+player_coins = 150
+game_progress = 0
+MAX_PROGRESS = 1000
+INITIAL_ENEMY_COUNT = 5
+
+# 精灵组
+all_sprites = pygame.sprite.Group()
+enemies = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
+enemy_bullets = pygame.sprite.Group()
+
+# 加载资源
+shoot_sound = None
+try:
+    if os.path.exists("sfx_laser1.ogg"):
+        shoot_sound = pygame.mixer.Sound("sfx_laser1.ogg")
+except:
+    pass
+
+background_image = None
+try:
+    if os.path.exists("darkPurple.png"):
+        background_image = pygame.image.load("darkPurple.png").convert()
+        background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+except:
+    pass
+
+def get_chinese_font(size):
+    """尝试加载系统中可能的中文字体"""
+    font_list = [
+        'simhei.ttf',  # 黑体
+        'simsun.ttc',  # 宋体
+        'msyh.ttc',  # 微软雅黑
+        'simkai.ttf',  # 楷体
+        'STKAITI.TTF',  # 楷体
+        'C:\\Windows\\Fonts\\simhei.ttf',  # Windows黑体路径
+        'C:\\Windows\\Fonts\\simsun.ttc',  # Windows宋体路径
+        '/System/Library/Fonts/PingFang.ttf',  # Mac苹方字体
+        '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf'  # Linux字体
+    ]
+
+    for font_name in font_list:
+        try:
+            if os.path.exists(font_name):
+                return pygame.font.Font(font_name, size)
+        except:
+            continue
+
+    try:
+        return pygame.font.SysFont('simsunnsimsun', size)
+    except:
+        try:
+            return pygame.font.SysFont('microsoftyaheiuims', size)
+        except:
+            return pygame.font.Font(None, size)
+
+# ========== 游戏对象类 ==========
+class Player(pygame.sprite.Sprite):
+    def __init__(self, ship_type=0):
+        super().__init__()
+        self.ship_type = ship_type
+        # ... (完整Player类代码，同上)
+        
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, health=100):
+        super().__init__()
+        # ... (完整Enemy类代码，同上)
+        
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, has_attack_boost=False):
+        super().__init__()
+        # ... (完整Bullet类代码，同上)
+        
+class EnemyBullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        # ... (完整EnemyBullet类代码，同上)
+
+# ========== UI组件类 ==========
+class Button:
+    def __init__(self, x, y, width, height, text, font, color=LIGHT_BLUE, hover_color=BLUE):
+        # ... (完整Button类代码，同上)
+        
+class ShopItem:
+    def __init__(self, name, description, price, item_type, item_data=None):
+        # ... (完整ShopItem类代码，同上)
+
+# ========== 游戏界面函数 ==========
+def show_shop_screen():
+    # ... (完整show_shop_screen函数代码，同上)
+    
+def show_start_screen():
+    # ... (完整show_start_screen函数代码，同上)
+    
+def show_game_over_screen(final_score):
+    # ... (完整show_game_over_screen函数代码，同上)
+
+# ========== 工具函数 ==========
+def draw_health_bar(surface, x, y, health, max_health, width=30, height=4):
+    # ... (完整draw_health_bar函数代码，同上)
+    
+def reset_game():
+    # ... (完整reset_game函数代码，同上)
+
+# ========== 主游戏循环 ==========
+def main():
+    # ... (完整main函数代码，同上)
+
+if __name__ == "__main__":
+    main()
