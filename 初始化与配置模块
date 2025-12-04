@@ -1,0 +1,39 @@
+# config.py
+import pygame
+import sys
+import os
+
+# 初始化pygame
+pygame.init()
+
+# 屏幕设置
+WIDTH, HEIGHT = 480, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("飞机大战")
+
+# 颜色定义
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+LIGHT_BLUE = (100, 100, 255)
+PURPLE = (128, 0, 128)
+ORANGE = (255, 165, 0)
+
+# 金币系统
+player_coins = 150  # 初始金币
+
+# 游戏进度变量
+game_progress = 0  # 游戏进度，随分数增加
+MAX_PROGRESS = 1000  # 最大进度值
+
+# 初始敌机数量
+INITIAL_ENEMY_COUNT = 5
+
+# 创建精灵组
+all_sprites = pygame.sprite.Group()
+enemies = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
+enemy_bullets = pygame.sprite.Group()
